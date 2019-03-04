@@ -1,20 +1,19 @@
+##### server.R #####
+
 shinyServer(function(input, output) {
+  options(shiny.maxRequestSize=30*1024^2) # Uploadlimit auf 30 mb erhoehen 
   
 library(DT)  
 
-  # To Do
-  # Fehlermeldung bei falschen Datenformat
-  # Kein Uploadlimit A
+  ##### TO DO
+  # Fehlermeldung bei falschen Datenformat A
   # Slider M
-  # nach Datum sortieren A
   # Statistik gedoens M
-  # Map A
-  # Schriftliches Teil
+  # Schriftlicher Teil
+  # Demo Daten: Den Krabben ganz nah entfernen A
+  # netter Header ! A
   
-  
-  
-  
-  
+
     
 # Funktion zur Extrahierung von Geodaten  
   Geo.extract<- function(listenelement){   
@@ -32,13 +31,12 @@ library(DT)
                               time, countr, type, ter, dif)))  # schreibt Vector
     res  # output
   }  
-  
+  ##### Daten einlesen ##### 
 # Daten einlesen als reaktives Element
 # wenn der Nutzer noch kein Element eingelesen hat, wird NULL ausgegeben
 # Die xml oder gpx- Datei wird eingelesen, zu einer Liste konvertiert und bereinigt
 # die oben definierte Funktion Geo.extract zieht fuer jeden Geocache die Daten aus der Datei
-# Zeilen- und Spaltennamen werden vergeben
-  
+# Zeilen- und Spaltennamen werden vergeben, aufsteigend nach Datum sortiert
   dset <- reactive({
     input$refresh
     isolate({if(is.null(input$file)) {return (NULL)}
@@ -52,25 +50,28 @@ library(DT)
         rownames(dset) <- (1 : c(nrow(dset)))
         dset <- separate(dset, time, into = c("date", "uhrzeit"), sep = "T",
                          remove = T, extra = "warn" )
+        dset <- arrange(dset,as.Date(dset$date, "%Y-%m-%d"))
         return(dset)
       }
     })
   })
 
-  # reactive data table shown in "Data Overview"
+  #####Rendertable#####
+    # reactive data table shown in "Datenueberblick"
   output$dataUI <- DT::renderDataTable({
     dset()
   })
   
   # Feedback zum Upload-Button
-  observeEvent(input$refresh, {
-    showNotification("Daten hochgeladen", type = "error", duration = 10)
-  })
+  # observeEvent(input$refresh, {
+  #   showNotification("Daten hochgeladen", type = "error", duration = 10)
+  # })
   
 
-  
+  #####Landerauswahl#####
   output$value <- renderPrint({ input$radio })  #Server-Code "Länderauswahl"
   
+  #####Map#####
   output$map <- renderLeaflet({
     map = leaflet() %>%
       addTiles() %>%
@@ -82,9 +83,47 @@ library(DT)
       )
   })      #Server-Code "Map"
   
-   output$range <- renderPrint({ input$slider2 })  #Server-Code "Date-Slider"
+  #### Idee Referenzierung von der Map auf den Slider-Input ####
   
+  # observer-Funktion für die Map, um auf die Daten des Sliders zugreifen
+  # zu können. Hab gedacht man könnte bei 'data =' statt 'dset()' dann die 
+  # entsprechende Referenz zum Date-Range des Sliders angeben 
+  # (ich hab aber keine Ahnung, wie das geht).
+  
+  #  observe({
+  #    leafletProxy("map", data = dset()) %>%
+  #      clearTiles %>%
+  #      addTiles() %>%
+  #      addMarkers(data = dset(), lng = ~as.numeric(Lon), lat= ~as.numeric(Lat),
+  #                 popup = ~as.character(name), label = ~as.character(name)
+  #      )
+  #  })
+  
+  #### Ende ####
+  
+  ##### Date Slider#####
+  output$range <- renderPrint({ input$DatesMerge })  #Server-Code "Date-Slider"
+  
+  ##### Scatterplot #####
+  # Scatterplot für Terrain und Schwierigkeitsgrad; hab die Achsen leider nicht
+  # umbenennen können
+  # wenn man das 'as.numeric' weglässt und nur '~dif' und '~ter' schreibt, kommt
+  # ein farbiger Plot raus, aber ich weiß nicht was er bedeutet :D
+  
+  output$plot <- renderPlotly({
+    plot_ly(data = dset(), x = ~as.numeric(dif),
+            y = ~as.numeric(ter))
+  })
+  
+  output$hover <- renderPrint({
+    d <- event_data("plotly_hover")
+  })
+  
+  output$click <- renderPrint({
+    d <- event_data("plotly_click")
+  })
   
   output$value <- renderPrint({ input$select })   #Server-Code "Geschlecht"
+  
   output$value <- renderPrint({ input$select })   #Server-Code "Alter"
-  })
+})

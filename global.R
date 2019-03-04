@@ -1,11 +1,11 @@
 library(shiny)
-library(shiny)
 library(shinydashboard)
 library(graphics)
 library(leaflet)
 library(tidyverse)
 library(xml2)
-
+library(DT)
+library(plotly)
 
 midpoints <- data.frame(id= c("Welt", "Afrika", "Asien", "Europa", "Nordamerika", 
                               "Südamerika"),
