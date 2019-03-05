@@ -51,11 +51,13 @@ library(DT)
         dset <- separate(dset, time, into = c("date", "uhrzeit"), sep = "T",
                          remove = T, extra = "warn" )
         dset <- arrange(dset,as.Date(dset$date, "%Y-%m-%d"))
+        
         return(dset)
       }
     })
   })
-
+ 
+  
   #####Rendertable#####
     # reactive data table shown in "Datenueberblick"
   output$dataUI <- DT::renderDataTable({
@@ -103,6 +105,40 @@ library(DT)
   
   ##### Date Slider#####
   output$range <- renderPrint({ input$DatesMerge })  #Server-Code "Date-Slider"
+ 
+  # Minimum und Maximum des Sliders wird berechnet
+  slider_min <- reactive({
+    input$refresh
+    isolate({if(is.null(input$file)) {return (as.Date(2000-01-01))}
+      else{
+        slider_min <- dset()[1,"date"]
+        return(slider_min)
+      }
+    })
+  })
+  
+  slider_max <- reactive({
+    input$refresh
+    isolate({if(is.null(input$file)) {return (as.Date(2019-01-01))}
+      else{
+        slider_max <- dset()[nrow(dset()),"date"]
+        return(slider_max)
+      }
+    })
+  })
+  
+ output$slider_datum <- renderUI({
+  sliderInput("DatesMerge", 
+              "Dates:", 
+              min=as.Date(slider_min()), 
+              max=as.Date(slider_max()), 
+              value=as.Date(c(slider_min(), slider_max())),
+              timeFormat="%d.%m.%Y",
+              step = 7
+            )
+ })
+  
+ 
   
   ##### Scatterplot #####
   # Scatterplot für Terrain und Schwierigkeitsgrad; hab die Achsen leider nicht
@@ -111,8 +147,8 @@ library(DT)
   # ein farbiger Plot raus, aber ich weiß nicht was er bedeutet :D
   
   output$plot <- renderPlotly({
-    plot_ly(data = dset(), x = ~as.numeric(dif),
-            y = ~as.numeric(ter))
+    plot_ly(data = dset(), x = ~(dif),
+            y = ~(ter))
   })
   
   output$hover <- renderPrint({

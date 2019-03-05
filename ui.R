@@ -48,37 +48,16 @@ dashboardPage(
                                   ),
                   
   ##### Slider UI #####                
-  
+          
                   
-  ### Neuer Teil ###
-  # hab hier noch den Refresh-Button eingebaut
-  # Überlegung meinerseits war, für bspw. für 'min' statt 'as.Date' direkt 'dset[1,5]'
-  # anzugeben, damit der Slider auf den Datensatz (Zeile 1, Spalte 5, = date)
-  # zugreift & das als Start-Datum einsetzt (gleiches für 'max' mit der letzten Zeile)
-  # und als 'value' für beide Slider dann jeweils den Start- & Endpunkt benutzt
-                  
-                  
-                  
-                  
-                  
-                  fluidRow(
-                    box(sliderInput("DatesMerge",
-                                    "Dates:",
-                                    min = as.Date("2000-01-01", "%Y-%m-%d"),
-                                    max = as.Date("2019-01-01", "%Y-%m-%d"),
-                                    value=as.Date(c("2005-01-01", "2015-01-01")),
-                                    timeFormat="%d.%m.%Y",
-                                    step = 7), width = 12,
-                                    actionButton("refresh", "Reload Date Range")
-                        )
-                    # Begrenzung fuer Slider
-                    # So kann man NORMALERWEISE auf den 1. und letzten Eintrag referenzieren
-                    # geodf[1,"date"] # 1. Cache
-                    # geodf[nrow(geodf),"date"] # letzter Cache
-                    
-                    
+                fluidRow(
+                  box(uiOutput("slider_datum"), # fertigen Slider darstellen
+                      actionButton("refresh", "auf Datensatz anwenden")  #####Umbenennen
+                      
+                  )
                   )
                 )),
+  
   
   ##### Datenueberblick UI #####
   
@@ -86,11 +65,8 @@ dashboardPage(
           tabName = "Datenueberblick",
           DT::dataTableOutput("dataUI")),
   
-  
-  
   ##### Statistiken UI ######
   
-        
   # zu den Statistiken hab ich leider noch fast nichts, weil die Referenzierung
   # irgendwie schwierig ist oder er den dset nicht erkennt...
   
@@ -107,7 +83,6 @@ dashboardPage(
           )
   ),
         
-  
   ##### Fragebogen UI #####
   
         tabItem(tabName = "Fragebogen",
