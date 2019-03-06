@@ -35,6 +35,10 @@ dashboardPage(
                         multiple = FALSE, accept = c( ".gpx", ".xml"), 
                         placeholder = "Geodaten hochladen, max. 30 MB, .gpx oder .xml Format"),
                         actionButton("refresh", "Karte erstellen")),
+                    
+                        #verbatimTextOutput("range"), # zeigt range
+                        #textOutput("SliderText"),
+                    
                     box(radioButtons("radiomid", label = h3("Länderauswahl"),
                                       choices = list("Welt" = 1, "Afrika" = 2, 
                                                      "Asien" = 3, 
@@ -52,8 +56,10 @@ dashboardPage(
                   
                 fluidRow(
                   box(uiOutput("slider_datum"), # fertigen Slider darstellen
-                      actionButton("refresh", "auf Datensatz anwenden")  #####Umbenennen
-                      
+                      actionButton("refresh", "auf Datensatz anwenden"),  #####Umbenennen
+                      verbatimTextOutput("range"),
+                      textOutput("SliderText"),
+                      textOutput("SliderText1")
                   )
                   )
                 )),

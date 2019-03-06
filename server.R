@@ -12,9 +12,7 @@ library(DT)
   # Schriftlicher Teil
   # Demo Daten: Den Krabben ganz nah entfernen A
   # netter Header ! A
-  
 
-    
 # Funktion zur Extrahierung von Geodaten  
   Geo.extract<- function(listenelement){   
     id <- listenelement$name
@@ -36,7 +34,9 @@ library(DT)
 # wenn der Nutzer noch kein Element eingelesen hat, wird NULL ausgegeben
 # Die xml oder gpx- Datei wird eingelesen, zu einer Liste konvertiert und bereinigt
 # die oben definierte Funktion Geo.extract zieht fuer jeden Geocache die Daten aus der Datei
-# Zeilen- und Spaltennamen werden vergeben, aufsteigend nach Datum sortiert
+# Zeilen- und Spaltennamen werden vergeben, zu Datatable konvertiert und aufsteigend 
+# nach Datum sortiert
+  
   dset <- reactive({
     input$refresh
     isolate({if(is.null(input$file)) {return (NULL)}
@@ -44,14 +44,14 @@ library(DT)
         geo <- read_xml(input$file$datapath) # Verweis auf Originaldatei
         geoli <- xml2::as_list(geo)
         geoclean <- geoli$gpx[-c(1:7)]
-        dset <- as.data.frame(do.call("rbind", lapply(geoclean, Geo.extract)),
+        dset <- as.data.table(do.call("rbind", lapply(geoclean, Geo.extract)),
                               stringsAsFactors = F)
         colnames(dset)<- c("id","name","Lon", "Lat", "time", "countr", "type", "ter", "dif")
         rownames(dset) <- (1 : c(nrow(dset)))
         dset <- separate(dset, time, into = c("date", "uhrzeit"), sep = "T",
-                         remove = T, extra = "warn" )
+                         remove = T, extra = "warn" ) 
+        dset$date <- as.Date(dset$date)
         dset <- arrange(dset,as.Date(dset$date, "%Y-%m-%d"))
-        
         return(dset)
       }
     })
@@ -73,17 +73,29 @@ library(DT)
   #####Landerauswahl#####
   output$value <- renderPrint({ input$radio })  #Server-Code "Länderauswahl"
   
-  #####Map#####
+  #####Map Server Code######
   output$map <- renderLeaflet({
     map = leaflet() %>%
       addTiles() %>%
       setView(midpoints[input$radiomid,"lon"],     #Map-Ansicht je nach Auswahl der Länder
               midpoints[input$radiomid,"lat"],
               midpoints[input$radiomid,"ZL"]) %>%
-      addMarkers(data = dset(), lng = ~as.numeric(Lon), lat= ~as.numeric(Lat),
+      
+      # Anzeigen der Caches auf der Karte
+      # Der Datensatz wird als Subset aus dem gew�hlten Zeitbereich genereiert
+      
+      
+      addMarkers(#data = dset(), 
+               data = subset(dset(), dset()$date >= range_min()    
+                        & dset()$date <= range_max()),
+                 lng = ~as.numeric(Lon), lat= ~as.numeric(Lat), 
                  popup = ~as.character(name), label = ~as.character(name)
       )
-  })      #Server-Code "Map"
+  })      
+  
+  
+  
+  
   
   #### Idee Referenzierung von der Map auf den Slider-Input ####
   
@@ -105,7 +117,30 @@ library(DT)
   
   ##### Date Slider#####
   output$range <- renderPrint({ input$DatesMerge })  #Server-Code "Date-Slider"
- 
+  range_min <- reactive({as.character(input$DatesMerge[1])})
+  range_max <- reactive({as.character(input$DatesMerge[2])})
+  
+  output$SliderText <- renderText({as.character(input$DatesMerge[1])})     
+  output$SliderText1 <- renderText({as.character(input$DatesMerge[2])})
+  
+  # range_min <- reactive({
+  #   isolate({if(is.null(input$file)) {return (NULL)}
+  #     else{
+  #       range_min <- as.Date(input$DatesMerge[1])
+  #       return(range_min)
+  #     }
+  #   })
+  # })
+  # 
+  # range_max <- reactive({
+  #   isolate({if(is.null(input$file)) {return (NULL)}
+  #     else{
+  #       range_max <- as.Date(input$DatesMerge[2])
+  #       return(range_max)
+  #     }
+  #   })
+  # })
+  
   # Minimum und Maximum des Sliders wird berechnet
   slider_min <- reactive({
     input$refresh
@@ -133,7 +168,7 @@ library(DT)
               min=as.Date(slider_min()), 
               max=as.Date(slider_max()), 
               value=as.Date(c(slider_min(), slider_max())),
-              timeFormat="%d.%m.%Y",
+              timeFormat="%F",
               step = 7
             )
  })
@@ -162,4 +197,5 @@ library(DT)
   output$value <- renderPrint({ input$select })   #Server-Code "Geschlecht"
   
   output$value <- renderPrint({ input$select })   #Server-Code "Alter"
+  
 })
