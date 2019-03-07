@@ -1,28 +1,28 @@
-## ui.R ##
+  ##############################################################
+  
+  # Seminar: Building Online Apps with R , Universitaet Konstanz
+  
+  # von: Maren Roeckle & Anna Knoop
+  
+  ##############################################################
+  
+  ## ui.R ##
+  
 
-##install.packages("shiny")
-##install.packages("plotGoogleMaps")
-##install.packages("leaflet")
-##install.packages("DT")
-
-library(shiny)
-library(shinydashboard)
-library(graphics)
-library(leaflet)
 
   ##### Dashboard Header und Sidebar ####
 
-dashboardPage(
-  dashboardHeader(title = "GeoStat"),
-  dashboardSidebar(
-    sidebarMenu(
-      menuItem("Karte", tabName = "Karte", icon = icon("Karte")),
-      menuItem("Datenueberblick", tabName = "Datenueberblick", icon = icon("Karte")),
-      menuItem("Statistiken", tabName = "Statistiken", 
-               icon = icon("Statistiken")),
-      menuItem("Fragebogen", tabName = "Fragebogen", icon = icon("Fragebogen"))
-    )
-  ),
+  dashboardPage(skin = "green",
+    dashboardHeader(title = "GeoStat"),
+    dashboardSidebar(
+      sidebarMenu(
+        menuItem("Karte", tabName = "Karte", icon = icon("Karte")),
+        menuItem("Datenueberblick", tabName = "Datenueberblick", icon = icon("Karte")),
+        menuItem("Statistiken", tabName = "Statistiken", 
+                 icon = icon("Statistiken")),
+        menuItem("Fragebogen", tabName = "Fragebogen", icon = icon("Fragebogen"))
+      )
+    ),
   
   ##### Karte UI #####
   
@@ -35,9 +35,6 @@ dashboardPage(
                         multiple = FALSE, accept = c( ".gpx", ".xml"), 
                         placeholder = "Geodaten hochladen, max. 30 MB, .gpx oder .xml Format"),
                         actionButton("refresh", "Karte erstellen")),
-                    
-                        #verbatimTextOutput("range"), # zeigt range
-                        #textOutput("SliderText"),
                     
                     box(radioButtons("radiomid", label = h3("Länderauswahl"),
                                       choices = list("Welt" = 1, "Afrika" = 2, 
@@ -55,11 +52,12 @@ dashboardPage(
           
                   
                 fluidRow(
-                  box(uiOutput("slider_datum"), # fertigen Slider darstellen
-                      actionButton("refresh", "auf Datensatz anwenden"),  #####Umbenennen
-                      verbatimTextOutput("range"),
-                      textOutput("SliderText"),
-                      textOutput("SliderText1")
+                  box(uiOutput("slider_datum"), width = 12 # fertigen Slider darstellen
+                      
+                      #actionButton("refresh", "auf Datensatz anwenden"),
+                      #verbatimTextOutput("range")
+                      #textOutput("SliderText"),
+                      #textOutput("SliderText1")
                   )
                   )
                 )),
@@ -73,15 +71,15 @@ dashboardPage(
   
   ##### Statistiken UI ######
   
-  # zu den Statistiken hab ich leider noch fast nichts, weil die Referenzierung
-  # irgendwie schwierig ist oder er den dset nicht erkennt...
-  
   
   tabItem(tabName = "Statistiken",
           h2("Statistiken"),
           fluidPage(
             fluidRow(
-              box(plotlyOutput("plot"),
+              box(plotlyOutput("barchart")
+              )),
+            fluidRow(
+              box(plotlyOutput("scatterplot"),
                   verbatimTextOutput("hover"),
                   verbatimTextOutput("click")
               )

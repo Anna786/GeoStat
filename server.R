@@ -1,17 +1,23 @@
-##### server.R #####
 
-shinyServer(function(input, output) {
-  options(shiny.maxRequestSize=30*1024^2) # Uploadlimit auf 30 mb erhoehen 
+  ##############################################################
   
-library(DT)  
-
+  # Seminar: Building Online Apps with R , Universitaet Konstanz
+  
+  # von: Maren Roeckle & Anna Knoop
+  
+  ##############################################################
+  
+  ##### server.R #####
+  
   ##### TO DO
   # Fehlermeldung bei falschen Datenformat A
-  # Slider M
-  # Statistik gedoens M
-  # Schriftlicher Teil
   # Demo Daten: Den Krabben ganz nah entfernen A
-  # netter Header ! A
+  # mehr Demo Daten
+  # Beispielitem Fragebogen
+
+  shinyServer(function(input, output, session) {
+    options(shiny.maxRequestSize=30*1024^2) # Uploadlimit auf 30 mb erhoehen 
+  
 
 # Funktion zur Extrahierung von Geodaten  
   Geo.extract<- function(listenelement){   
@@ -28,17 +34,21 @@ library(DT)
     res <- as.vector(unlist(c(id, name, as.numeric(lon), as.numeric(lat),
                               time, countr, type, ter, dif)))  # schreibt Vector
     res  # output
-  }  
-  ##### Daten einlesen ##### 
-# Daten einlesen als reaktives Element
-# wenn der Nutzer noch kein Element eingelesen hat, wird NULL ausgegeben
-# Die xml oder gpx- Datei wird eingelesen, zu einer Liste konvertiert und bereinigt
-# die oben definierte Funktion Geo.extract zieht fuer jeden Geocache die Daten aus der Datei
-# Zeilen- und Spaltennamen werden vergeben, zu Datatable konvertiert und aufsteigend 
-# nach Datum sortiert
+  }
+  
+    
+    ##### Daten einlesen ##### 
+  # Daten einlesen als reaktives Element
+  # wenn der Nutzer noch kein Element eingelesen hat, wird NULL ausgegeben
+  # Die xml oder gpx- Datei wird eingelesen, zu einer Liste konvertiert und bereinigt
+  # die oben definierte Funktion Geo.extract zieht fuer jeden Geocache die Daten aus der Datei
+  # Zeilen- und Spaltennamen werden vergeben, zu Datatable konvertiert und aufsteigend 
+  # nach Datum sortiert
   
   dset <- reactive({
     input$refresh
+    validate(
+      need(input$file != "", "Bitte wählen Sie eine Datei aus."))
     isolate({if(is.null(input$file)) {return (NULL)}
       else{
         geo <- read_xml(input$file$datapath) # Verweis auf Originaldatei
@@ -73,77 +83,44 @@ library(DT)
   #####Landerauswahl#####
   output$value <- renderPrint({ input$radio })  #Server-Code "Länderauswahl"
   
+  
   #####Map Server Code######
+  # Anzeigen der Caches auf der Karte
+  #Map-Ansicht je nach Auswahl der Länder
+  # Der Datensatz wird als Subset aus dem gewaehlten Zeitbereich genereiert
+  
   output$map <- renderLeaflet({
     map = leaflet() %>%
       addTiles() %>%
-      setView(midpoints[input$radiomid,"lon"],     #Map-Ansicht je nach Auswahl der Länder
+      setView(midpoints[input$radiomid,"lon"],     
               midpoints[input$radiomid,"lat"],
               midpoints[input$radiomid,"ZL"]) %>%
-      
-      # Anzeigen der Caches auf der Karte
-      # Der Datensatz wird als Subset aus dem gew�hlten Zeitbereich genereiert
-      
-      
-      addMarkers(#data = dset(), 
+      addAwesomeMarkers(#data = dset(), 
                data = subset(dset(), dset()$date >= range_min()    
                         & dset()$date <= range_max()),
-                 lng = ~as.numeric(Lon), lat= ~as.numeric(Lat), 
+                 lng = ~as.numeric(Lon), lat= ~as.numeric(Lat), icon = icons,
                  popup = ~as.character(name), label = ~as.character(name)
       )
   })      
   
   
-  
-  
-  
-  #### Idee Referenzierung von der Map auf den Slider-Input ####
-  
-  # observer-Funktion für die Map, um auf die Daten des Sliders zugreifen
-  # zu können. Hab gedacht man könnte bei 'data =' statt 'dset()' dann die 
-  # entsprechende Referenz zum Date-Range des Sliders angeben 
-  # (ich hab aber keine Ahnung, wie das geht).
-  
-  #  observe({
-  #    leafletProxy("map", data = dset()) %>%
-  #      clearTiles %>%
-  #      addTiles() %>%
-  #      addMarkers(data = dset(), lng = ~as.numeric(Lon), lat= ~as.numeric(Lat),
-  #                 popup = ~as.character(name), label = ~as.character(name)
-  #      )
-  #  })
-  
-  #### Ende ####
-  
   ##### Date Slider#####
-  output$range <- renderPrint({ input$DatesMerge })  #Server-Code "Date-Slider"
+  
+  output$range <- renderPrint({ input$DatesMerge })  
+  
+    # die vom User gewaehlten Grenzen des Sliders werden als Element abgespeichert 
+  
   range_min <- reactive({as.character(input$DatesMerge[1])})
   range_max <- reactive({as.character(input$DatesMerge[2])})
   
-  output$SliderText <- renderText({as.character(input$DatesMerge[1])})     
-  output$SliderText1 <- renderText({as.character(input$DatesMerge[2])})
-  
-  # range_min <- reactive({
-  #   isolate({if(is.null(input$file)) {return (NULL)}
-  #     else{
-  #       range_min <- as.Date(input$DatesMerge[1])
-  #       return(range_min)
-  #     }
-  #   })
-  # })
-  # 
-  # range_max <- reactive({
-  #   isolate({if(is.null(input$file)) {return (NULL)}
-  #     else{
-  #       range_max <- as.Date(input$DatesMerge[2])
-  #       return(range_max)
-  #     }
-  #   })
-  # })
+  #output$SliderText <- renderText({as.character(input$DatesMerge[1])})     
+  #output$SliderText1 <- renderText({as.character(input$DatesMerge[2])})
   
   # Minimum und Maximum des Sliders wird berechnet
   slider_min <- reactive({
     input$refresh
+    validate(
+      need(input$file != "", "Bitte wählen Sie eine Datei aus."))
     isolate({if(is.null(input$file)) {return (as.Date(2000-01-01))}
       else{
         slider_min <- dset()[1,"date"]
@@ -154,6 +131,8 @@ library(DT)
   
   slider_max <- reactive({
     input$refresh
+    validate(
+      need(input$file != "", "Bitte wählen Sie eine Datei aus."))
     isolate({if(is.null(input$file)) {return (as.Date(2019-01-01))}
       else{
         slider_max <- dset()[nrow(dset()),"date"]
@@ -161,30 +140,61 @@ library(DT)
       }
     })
   })
-  
- output$slider_datum <- renderUI({
-  sliderInput("DatesMerge", 
-              "Dates:", 
-              min=as.Date(slider_min()), 
-              max=as.Date(slider_max()), 
-              value=as.Date(c(slider_min(), slider_max())),
-              timeFormat="%F",
-              step = 7
-            )
- })
-  
  
+  # Definition des Sliders, die default-Werte der Range sind Minimum und Maximum des Sliders
+   
+   output$slider_datum <- renderUI({
+    sliderInput("DatesMerge", 
+                "Dates:", 
+                min=as.Date(slider_min()), 
+                max=as.Date(slider_max()), 
+                value=as.Date(c(slider_min(), slider_max())),
+                timeFormat="%F",
+                step = 7
+              )
+   })
   
-  ##### Scatterplot #####
-  # Scatterplot für Terrain und Schwierigkeitsgrad; hab die Achsen leider nicht
-  # umbenennen können
-  # wenn man das 'as.numeric' weglässt und nur '~dif' und '~ter' schreibt, kommt
-  # ein farbiger Plot raus, aber ich weiß nicht was er bedeutet :D
+   #### Bar Chart ####
+   
+   # rows <- reactive({
+   #   length(input$dset())
+   #   return(rows)
+   # })
+   
+   # output$count_rows <- renderPrint({ rows() })
+   # 
+   # count <- reactive({
+   #   if(is.null(input$file)){return(NULL)}
+   #   isolate({ 
+   #     input$file
+   #     count_all <- nrow(dset())
+   #   })
+   #   return(count_all)
+   # })
+   
+   output$barchart <- renderPlotly({
+     validate(
+       need(input$file != "", "Bitte wählen Sie eine Datei aus."))
+     plot_ly(data = dset(), x = ~countr, 
+             y = ~rows,
+             type = 'bar', name = 'Anzahl der Caches', 
+             marker = list(color = 'rgb(0,109,0)')) %>%
+       layout(title = "Anzahl der Caches pro Land",
+              xaxis = list(title = "Länder"),
+              yaxis = list(title = "Anzahl"))
+   })
   
-  output$plot <- renderPlotly({
-    plot_ly(data = dset(), x = ~(dif),
-            y = ~(ter))
-  })
+   
+   output$scatterplot <- renderPlotly({
+     validate(
+       need(input$file != "", "Bitte wählen Sie eine Datei aus."))
+     plot_ly(data = dset(), x = ~as.numeric(dif),
+             y = ~as.numeric(ter), marker = list(color = 'rgb(0,109,0)')) %>%
+       layout(title = "Schwierigkeitsgrad und Geländewertung",
+              xaxis = list(title = "Schwierigkeitsgrad"),
+              yaxis = list(title = "Geländewertung"))
+   })
+ 
   
   output$hover <- renderPrint({
     d <- event_data("plotly_hover")
@@ -194,8 +204,8 @@ library(DT)
     d <- event_data("plotly_click")
   })
   
-  output$value <- renderPrint({ input$select })   #Server-Code "Geschlecht"
+  output$gender <- renderPrint({ input$Geschlecht })   #Server-Code "Geschlecht"
   
-  output$value <- renderPrint({ input$select })   #Server-Code "Alter"
+  output$age <- renderPrint({ input$Alter })   #Server-Code "Alter"
   
-})
+  })
