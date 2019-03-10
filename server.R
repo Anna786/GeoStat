@@ -148,36 +148,20 @@
               )
    })
   
-   #### Bar Chart ####
-   
-   # rows <- reactive({
-   #   length(input$dset())
-   #   return(rows)
-   # })
-   
-   # output$count_rows <- renderPrint({ rows() })
-   # 
-   # count <- reactive({
-   #   if(is.null(input$file)){return(NULL)}
-   #   isolate({ 
-   #     input$file
-   #     count_all <- nrow(dset())
-   #   })
-   #   return(count_all)
-   # })
-   
+  
+  
    output$barchart <- renderPlotly({
      validate(
        need(input$file != "", "Bitte wählen Sie eine Datei aus."))
-     plot_ly(data = dset(), x = ~countr, 
-             y = ~rows,
-             type = 'bar', name = 'Anzahl der Caches', 
-             marker = list(color = 'rgb(0,109,0)')) %>%
+     plot_ly(data = dset(), x = ~countr) %>%
+              add_histogram()%>%
        layout(title = "Anzahl der Caches pro Land",
               xaxis = list(title = "Länder"),
               yaxis = list(title = "Anzahl"))
    })
-  
+   
+   
+   
    
    output$scatterplot <- renderPlotly({
      validate(

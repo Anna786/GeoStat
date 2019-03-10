@@ -33,8 +33,8 @@
                   fluidRow(
                     box(fileInput("file", label = h3("Datensatz hochladen"),
                         multiple = FALSE, accept = c( ".gpx", ".xml"), 
-                        placeholder = "Geodaten hochladen, max. 30 MB, .gpx oder .xml Format"),
-                        actionButton("refresh", "Karte erstellen")
+                        placeholder = "Geodaten hochladen, max. 30 MB, .gpx oder .xml Format")
+                        #actionButton("refresh", "Karte erstellen")
                         ),
                     box(radioButtons("radiomid", label = h3("Länderauswahl"),
                                       choices = list("Welt" = 1, "Afrika" = 2, 
