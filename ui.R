@@ -17,7 +17,7 @@
     dashboardSidebar(
       sidebarMenu(
         menuItem("Karte", tabName = "Karte", icon = icon("Karte")),
-        menuItem("Datenueberblick", tabName = "Datenueberblick", icon = icon("Karte")),
+        menuItem("Datenüberblick", tabName = "Datenüberblick", icon = icon("Karte")),
         menuItem("Statistiken", tabName = "Statistiken", 
                  icon = icon("Statistiken")),
         menuItem("Fragebogen", tabName = "Fragebogen", icon = icon("Fragebogen"))
@@ -34,8 +34,8 @@
                     box(fileInput("file", label = h3("Datensatz hochladen"),
                         multiple = FALSE, accept = c( ".gpx", ".xml"), 
                         placeholder = "Geodaten hochladen, max. 30 MB, .gpx oder .xml Format"),
-                        actionButton("refresh", "Karte erstellen")),
-                    
+                        actionButton("refresh", "Karte erstellen")
+                        ),
                     box(radioButtons("radiomid", label = h3("Länderauswahl"),
                                       choices = list("Welt" = 1, "Afrika" = 2, 
                                                      "Asien" = 3, 
@@ -44,6 +44,7 @@
                                                      "Südamerika" = 6), 
                                       selected = 1), width =6)
                   ),
+                  box(textOutput("summary"), width = 12),
                   fluidRow(
                     box(leafletOutput("map"), width = 12)
                                   ),
@@ -66,7 +67,7 @@
   ##### Datenueberblick UI #####
   
         tabItem(
-          tabName = "Datenueberblick",
+          tabName = "Datenüberblick",
           DT::dataTableOutput("dataUI")),
   
   ##### Statistiken UI ######
@@ -76,13 +77,37 @@
           h2("Statistiken"),
           fluidPage(
             fluidRow(
-              box(plotlyOutput("barchart")
-              )),
-            fluidRow(
               box(plotlyOutput("scatterplot"),
                   verbatimTextOutput("hover"),
                   verbatimTextOutput("click")
-              )
+              
+              ),
+              (box(tags$div(class="header", checked=NA,
+                            list(
+                              tags$p("Jeder Cache hat eine Wertung des Schwierigkeisgrads 
+                                     und eine Geländewertung, anhand derer man sich bei der Auswahl 
+                                     des zu suchenden Caches orientieren kann."),
+                              tags$p("Diese sind wie folgt zu verstehen:"),
+                              tags$p("Schwierigkeitsgrad"),
+                              tags$p("Stufe 1: Offensichtliches Versteck, wird von erfahrenen Cachern fast sofort gefunden."),
+                              tags$p("Stufe 5: Eine wirklich ernsthafte Herausforderung, spezielle Kenntnisse, Fähigkeiten und/oder 
+                                     Ausrüstung werden benoetigt, um diesen Cache zu finden"),
+                              tags$p("Geländewertung"),
+                              tags$p("Stufe 1: Ebene, kurze Wege, behindertengerecht."),
+                              tags$p("Stufe 5: lange Wanderung, es sind Spezial-Ausrüstungsgegenstände erforderlich, enge Höhlen, 
+                                     Hochgebirge, Tauchcaches fallen in diese Kategorie.")
+                              )
+                            )))),
+              
+            fluidRow(
+              box(
+                plotlyOutput("barchart")
+              ),
+              (box(tags$div(class="header", checked=NA,
+                            list(
+                              tags$p("Zeigt die gefundenen Caches per Land")
+                              )
+                              )))
             )
           )
   ),

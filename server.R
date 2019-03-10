@@ -8,18 +8,15 @@
   ##############################################################
   
   ##### server.R #####
-  
-  ##### TO DO
-  # Fehlermeldung bei falschen Datenformat A
-  # Demo Daten: Den Krabben ganz nah entfernen A
-  # mehr Demo Daten
-  # Beispielitem Fragebogen
+
 
   shinyServer(function(input, output, session) {
     options(shiny.maxRequestSize=30*1024^2) # Uploadlimit auf 30 mb erhoehen 
   
 
 # Funktion zur Extrahierung von Geodaten  
+# liest die Attribute eines Knotens aus und speichert diese einzeln
+    
   Geo.extract<- function(listenelement){   
     id <- listenelement$name
     name <- listenelement$cache$name
@@ -74,12 +71,6 @@
     dset()
   })
   
-  # Feedback zum Upload-Button
-  # observeEvent(input$refresh, {
-  #   showNotification("Daten hochgeladen", type = "error", duration = 10)
-  # })
-  
-
   #####Landerauswahl#####
   output$value <- renderPrint({ input$radio })  #Server-Code "Länderauswahl"
   
@@ -103,6 +94,11 @@
       )
   })      
   
+  # erstellt summary-Text
+  
+  output$summary <- renderText({paste("Der hochgeladene Datensatz enthält", nrow(dset()) ,
+                                      "Caches, gefunden zwischen", slider_min(), "und", 
+                                      slider_max(), "." )})
   
   ##### Date Slider#####
   
@@ -112,9 +108,7 @@
   
   range_min <- reactive({as.character(input$DatesMerge[1])})
   range_max <- reactive({as.character(input$DatesMerge[2])})
-  
-  #output$SliderText <- renderText({as.character(input$DatesMerge[1])})     
-  #output$SliderText1 <- renderText({as.character(input$DatesMerge[2])})
+ 
   
   # Minimum und Maximum des Sliders wird berechnet
   slider_min <- reactive({
@@ -188,14 +182,14 @@
    output$scatterplot <- renderPlotly({
      validate(
        need(input$file != "", "Bitte wählen Sie eine Datei aus."))
-     plot_ly(data = dset(), x = ~as.numeric(dif),
-             y = ~as.numeric(ter), marker = list(color = 'rgb(0,109,0)')) %>%
+     plot_ly(data = dset(), x = ~dif,
+             y = ~ter, marker = list(color = 'rgb(0,109,0)')) %>%
        layout(title = "Schwierigkeitsgrad und Geländewertung",
               xaxis = list(title = "Schwierigkeitsgrad"),
               yaxis = list(title = "Geländewertung"))
    })
  
-  
+   
   output$hover <- renderPrint({
     d <- event_data("plotly_hover")
   })
